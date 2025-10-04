@@ -1,0 +1,126 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10, 3.11]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('api/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        cd api
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run linting
+      run: |
+        cd api
+        pip install flake8
+        flake8 --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Run tests
+      run: |
+        cd api
+        pip install pytest pytest-cov
+        pytest --cov=app --cov-report=xml --cov-report=term-missing
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./api/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
+      run: |
+        cd api
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run security audit
+      run: |
+        cd api
+        pip install pip-audit
+        pip-audit --desc --format=json > security-report.json || true
+
+    - name: Upload security report
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-report
+        path: api/security-report.json
+
+  build-and-deploy:
+    needs: [test, security-audit]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push API image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./api
+        file: ./api/Dockerfile
+        push: true
+        tags: codesage/api:latest,codesage/api:${{ github.sha }}
+
+    - name: Build and push UI image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./ui
+        file: ./ui/Dockerfile
+        push: true
+        tags: codesage/ui:latest,codesage/ui:${{ github.sha }}
+
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production..."
+        # Add your deployment commands here
+        # kubectl apply -f k8s/
+        # Or docker-compose up -d
+        echo "Deployment completed"
