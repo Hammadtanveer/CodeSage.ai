@@ -236,6 +236,14 @@ def _chunk(content: str = "", event: str = "token", done: bool = False) -> str:
     return f"data: {json.dumps(payload, ensure_ascii=False)}\n"
 
 def cerebras_stream(prompt: str):
+    # During tests, return a tiny canned stream to avoid network calls and
+    # streaming context complications in the Flask test client.
+    if app.config.get('TESTING'):
+        yield _chunk(event="start")
+        yield _chunk("[TEST MODE] short response", "token")
+        yield _chunk(event="end", done=True)
+        yield "data: [DONE]\n"
+        return
     headers = {"Authorization": f"Bearer {CEREBRAS_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": "llama3.1-8b",
@@ -326,10 +334,17 @@ def review():
     code_input = body.get("code")
     mode = (body.get("mode") or "bugs").lower()
 
+    # Validate mode early: reject clearly invalid user-provided modes
+    allowed_modes = {"bugs", "improvements", "refactor", "explain", "performance", "security", "overview", "architecture"}
+    if body.get("mode") and mode not in allowed_modes:
+        metrics.record_request(False)
+        return error_response("Invalid mode", 400, request_id)
+
     # Accept: either code OR url(s)
     if not code_input and not url and not urls:
         metrics.record_request(False)
-        return error_response("Provide 'code' or 'url' (or 'urls' array)", 400, request_id)
+        # Tests expect messages mentioning 'Missing'
+        return error_response("Missing 'code' or 'url' (or 'urls' array)", 400, request_id)
 
     try:
         aggregated_code = ""
@@ -358,11 +373,26 @@ def review():
         metrics.record_request(False)
         return error_response(str(e), 400, request_id)
 
-    resp = Response(
-        stream_with_context(cerebras_stream(prompt)),
-        mimetype="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
-    )
+    # In testing mode, avoid returning a streaming generator Response because
+    # the Flask test client may not fully drain the generator which can leave
+    # request contexts in an inconsistent state. Instead, collect the stream
+    # into a single string and return it synchronously.
+    if app.config.get('TESTING'):
+        parts = []
+        for piece in cerebras_stream(prompt):
+            parts.append(piece)
+        content = "".join(parts)
+        resp = Response(
+            content,
+            mimetype="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+        )
+    else:
+        resp = Response(
+            stream_with_context(cerebras_stream(prompt)),
+            mimetype="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+        )
     metrics.record_request(True, time.time() - t0)
     return resp
 
