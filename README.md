@@ -1,159 +1,226 @@
-# CodeSage.ai
+# CodeSage.ai — AI Code Mentor
 
-CodeSage.ai is an AI-powered code review assistant that analyzes code from GitHub or pasted snippets and provides real-time feedback, suggestions, and reports.
+CodeSage.ai is an AI‑powered code review assistant. Paste code or point it to GitHub files and get real‑time analysis with clear, actionable insights across bug detection, improvements, refactoring, performance, security, and more.
 
-## Quick Start
+- Live streaming responses (SSE) for instant feedback
+- GitHub integration (single or multiple file URLs)
+- Secure by default (sanitization, rate limiting, CORS)
+- PWA with offline support and install prompts
+- Docker‑ready; easy to deploy on Render (free) or anywhere
 
-Recommended: Docker Compose (starts API, UI and optional services).
+---
 
-1. Clone the repo:
+## Table of contents
+- Overview
+- Features
+- Tech stack
+- Architecture at a glance
+- Getting started (local dev)
+- Environment variables
+- API reference
+- Docker Compose
+- Deploy to Render (free)
+- PWA notes
+- Testing
+- Security and privacy
+- Roadmap
+- License
 
-```
-git clone https://github.com/Hammadtanveer/CodeSage.ai.git
-cd CodeSage.ai
-```
+---
 
-2. Create backend env file:
+## Overview
 
-```
-cp api/.env.example api/.env
-# Edit api/.env and set CEREBRAS_API_KEY and ALLOWED_ORIGINS
-```
+CodeSage.ai helps developers quickly understand and improve code. It accepts:
+- GitHub blob URLs (single file or an array of files)
+- Raw code pasted into the UI
+- Minimal repository overview via README analysis
 
-3. Start with Docker Compose:
+The backend builds a mode‑specific prompt and streams results to the UI using Server‑Sent Events, so users see insights as they’re generated.
 
-```
+---
 
-```
+## Features
 
-4. Open the UI: http://localhost (or http://localhost:5173 for dev)
+- Analysis modes
+  - bugs — find issues and fixes with tiny code examples
+  - improvements — targeted suggestions with rationale
+  - refactor — safe step‑by‑step refactor plan
+  - performance — hotspots, complexity notes, concrete optimizations
+  - security — risks, severity, and safe fixes
+  - explain — simple English explanations of what code does
+  - overview / architecture — high‑level summaries and structure feedback
+- Multi‑file analysis (array of GitHub blob URLs)
+- Streaming UI with progress indicators
+- Copy and download results (Markdown)
+- Theme switcher (light/dark/auto), keyboard shortcuts, demo button
+- Input sanitization against prompt injection
+- CORS allow‑listing and rate limiting
+- PWA: service worker, manifest, install prompt, offline fallbacks
 
-## Development
+---
 
-Backend (api):
+## Tech stack
 
-```
-# CodeSage.ai
+- Frontend: React + TypeScript + Vite, Tailwind CSS, Framer Motion, PWA (service worker + manifest)
+- Backend: Flask, Flask‑CORS, Flask‑Limiter, requests, python‑dotenv
+- AI provider: Cerebras API (chat completions, streamed)
+- Packaging/Infra: Docker, Docker Compose, Nginx (for UI image), GitHub Actions (CI)
+- Optional (docker‑compose): Redis, Postgres (not required for basic functionality)
 
-CodeSage.ai is an AI-powered code review assistant that analyzes code (single files or multiple files from GitHub) and provides real-time, actionable feedback: bug detection, suggested improvements, refactor guidance, performance tips, and security notes.
+---
 
-This README covers how to get the project running locally, the core architecture and how CodeSage works, usage examples, and developer notes.
+## Architecture at a glance
 
-## Key features
+- UI (Vite) calls the API at /api/review and /api/analyze-repo
+- API
+  - fetches GitHub raw content (for blob URLs)
+  - sanitizes inputs to reduce prompt injection
+  - builds mode‑specific prompts
+  - streams the AI response as SSE
+- Nginx (UI container) proxies /api/* to the API container
+- Optional services (Redis/Postgres) are provided in docker-compose.yml for future expansion
 
-- Multi-file GitHub analysis (paste one or many blob URLs)
-- Real-time streaming responses to the UI using Server-Sent Events (SSE)
-- Multiple analysis modes: bugs, improvements, refactor, performance, security, explain
-- Prompt-injection mitigation and input sanitization
-- Lightweight caching of GitHub file content for speed
-- Docker-ready API and UI with production-friendly Dockerfiles
+---
 
-## Quick start
+## Getting started (local dev)
 
-Recommended: Docker Compose (starts API, UI and optional services).
+Prereqs: Node 18+ (or 20+), Python 3.11, Git.
 
-1. Clone the repo:
-
-```
-git clone https://github.com/Hammadtanveer/CodeSage.ai.git
-cd CodeSage.ai
-```
-
-2. Create backend env file and set your API key:
-
-```
-cp api/.env.example api/.env
-# Edit api/.env and set CEREBRAS_API_KEY and ALLOWED_ORIGINS
-```
-
-3. Start with Docker Compose:
-
-```
-docker-compose up -d --build
-```
-
-4. Open the UI: http://localhost (or http://localhost:5173 for dev)
-
-## Development
-
-Backend (api):
-
+1) Backend (Flask)
+- Set up venv and install:
 ```
 cd api
 python -m venv venv
-# Windows: venv\Scripts\Activate.ps1
-# macOS / Linux: source venv/bin/activate
+# Windows
+venv\Scripts\Activate.ps1
+# macOS/Linux
+source venv/bin/activate
+
 pip install -r requirements.txt
-pytest
+```
+- Create api/.env:
+```
+CEREBRAS_API_KEY=your_cerebras_key
+ALLOWED_ORIGINS=http://localhost:5173
+RATE_LIMIT=30/minute
+MAX_FILE_BYTES=120000
+```
+- Run:
+```
+python app.py
+# API at http://localhost:5000
 ```
 
-Frontend (ui):
-
+2) Frontend (Vite)
 ```
 cd ui
 npm ci
 npm run dev
-# Build for production
-npm run build
+# UI at http://localhost:5173
 ```
 
-## How it works (high level)
-
-- The frontend sends a POST to `/api/review` with either `url` (single file), `urls` (array) or raw `code`.
-- The backend fetches GitHub blob URLs (converted to raw URLs), sanitizes and aggregates content, builds a mode-specific prompt, and streams the AI provider responses back to clients via SSE.
-- The backend filters provider metadata-only chunks from the stream and returns only human-readable content to the UI.
-- A small in-memory cache reduces redundant GitHub downloads during short sessions.
-
-## Architecture
-
-- UI: React + TypeScript + Vite, Tailwind CSS for styling, Framer Motion for animations.
-- API: Flask (Python 3.11), server-sent events for streaming responses.
-- AI Provider: configured via `CEREBRAS_API_KEY` and external completion API (provider-specific code lives in `api/app.py`).
-- Optional services: Redis (caching), Postgres (analytics) — defined in `docker-compose.yml`.
-
-## API (examples)
-
-POST /api/review (single-file)
-
-Request body:
-
-```json
-{ "url": "https://github.com/user/repo/blob/main/file.js", "mode": "bugs" }
+Quick check:
 ```
-
-Multi-file:
-
-```json
-{ "urls": ["https://github.com/user/repo/blob/main/a.py", "https://github.com/user/repo/blob/main/b.py"], "mode": "refactor" }
+# Health
+curl http://localhost:5000/api/health
 ```
-
-Response: SSE stream with JSON/text chunks. The frontend consumes the stream and renders results progressively.
-
-GET /api/health
-- Returns current service health and simple metrics.
-
-## Privacy and security notes
-
-- Do not commit `api/.env` or any secret keys to the repo. The `.gitignore` excludes env files.
-- The backend strips or ignores likely prompt-injection strings from input code before sending prompts to the AI provider.
-- Rate-limiting and CORS are configured; set `RATE_LIMIT` and `ALLOWED_ORIGINS` appropriately for production.
-
-## Known limitations
-
-- The in-memory cache is short-lived and not designed for horizontal scaling (consider Redis for production caching).
-- The current streaming implementation filters provider metadata but consumers should still expect incremental partial content and handle reconnection/duplication.
-
-## Contributing
-
-1. Fork the repo
-2. Create a feature branch
-3. Add tests and documentation for new functionality
-4. Open a pull request
-
-## License
-
-MIT
 
 ---
 
-If you'd like, I can expand the API reference with concrete sample responses, add a quick architecture diagram, or commit and push the README update for you. Tell me which you prefer.
+## Environment variables
+
+Backend (api/.env):
+```
+CEREBRAS_API_KEY=your_cerebras_key  # required
+ALLOWED_ORIGINS=http://localhost:5173
+RATE_LIMIT=30/minute
+MAX_FILE_BYTES=120000
+```
+
+Frontend:
+- Typically none required. If you use an absolute API URL, add:
+```
+VITE_API_BASE_URL=https://your-api-domain/api
+```
+
+---
+
+## API reference
+
+Base URL:
+- Local: http://localhost:5000/api
+- Docker (via Nginx at port 80): http://localhost/api
+
+1) POST /api/review
+- Analyze raw code or GitHub file(s). Supports streaming (text/event-stream).
+- Request (one of):
+```
+{ "code": "<your code>", "mode": "bugs" }
+```
+```
+{ "url": "https://github.com/user/repo/blob/branch/path/file.js", "mode": "refactor" }
+```
+```
+{ "urls": ["https://github.com/.../a.ts","https://github.com/.../b.ts"], "mode": "performance" }
+```
+- Modes: bugs | improvements | refactor | explain | performance | security | overview | architecture
+- Response: SSE stream with JSON chunks shaped like:
+```
+data: {"choices":[{"delta":{"content":"...chunk..."}}],"event":"token"}
+```
+Ends with:
+```
+data: {"event":"end","choices":[{"delta":{"content":""}}],"done":true}
+data: [DONE]
+```
+
+2) POST /api/analyze-repo
+- Minimal README‑based overview:
+```
+{ "repository_url": "https://github.com/user/repo", "mode": "overview" }
+```
+- Response: SSE stream (same shape as above).
+
+3) GET /api/health
+- Returns status, version, simple metrics, and cache info.
+
+---
+
+## Docker Compose
+
+Build and run both services (API + UI). Optional Redis and Postgres included but not required.
+
+```
+docker-compose up -d --build
+# UI at http://localhost
+# API at http://localhost:5000
+```
+
+Tip: Ensure api/.env exists before running compose. The UI container proxies /api/ to the API container (see ui/nginx.conf).
+## Testing
+
+Backend:
+```
+cd api
+pytest -q
+```
+
+CI: GitHub Actions workflow runs lint, tests, and a basic security audit on pushes/PRs to main/develop.
+
+---
+
+## Security and privacy
+
+- Do not commit api/.env or any secrets. A .gitignore is included.
+- Input sanitization removes common injection phrases before prompting the model.
+- CORS is locked to allowed origins; rate limiting is enabled.
+- If a key was ever committed, rotate it immediately with the provider.
+
+---
+
+## License
+
+MIT — see LICENSE for details.
+
+---
+
