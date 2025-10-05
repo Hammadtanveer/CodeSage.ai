@@ -7,15 +7,9 @@ import {
   Clock,
   Download,
   RefreshCw,
-  Calendar,
   Activity,
   Zap,
-  FileText,
-  Share2,
-  Eye,
-  MousePointer,
-  Timer,
-  Database
+  FileText
 } from 'lucide-react';
 
 interface AnalyticsData {
