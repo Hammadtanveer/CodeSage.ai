@@ -280,19 +280,32 @@ def cerebras_stream(prompt: str):
             if line.startswith("{") and line.endswith("}"):
                 try:
                     obj = json.loads(line)
-                    if "choices" in obj:
-                        acc = ""
-                        for c in obj.get("choices", []):
-                            delta = (c or {}).get("delta") or {}
-                            piece = delta.get("content", "")
-                            if piece:
-                                acc += piece
-                        if acc:
-                            yield _chunk(acc, "token"); last_emit = time.time(); sent = True
+                    # If the object contains streaming choices, extract only content pieces.
+                    # If there are no content pieces (metadata like role/id/etc.), skip silently.
+                    if isinstance(obj, dict):
+                        if "choices" in obj:
+                            acc = ""
+                            for c in obj.get("choices", []):
+                                delta = (c or {}).get("delta") or {}
+                                piece = delta.get("content", "")
+                                if piece:
+                                    acc += piece
+                            if acc:
+                                yield _chunk(acc, "token")
+                                last_emit = time.time()
+                                sent = True
+                            else:
+                                # metadata-only choices (e.g. role markers) -> ignore
+                                sent = True
+                        else:
+                            # Generic JSON metadata from provider (not useful to clients) -> ignore
+                            sent = True
                 except json.JSONDecodeError:
+                    # If it isn't valid JSON after all, fall back to emitting the raw line below
                     pass
             if not sent:
-                yield _chunk(line, "token"); last_emit = time.time()
+                yield _chunk(line, "token")
+                last_emit = time.time()
     except GeneratorExit:
         return
     except Exception as e:
