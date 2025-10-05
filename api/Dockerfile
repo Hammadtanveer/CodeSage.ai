@@ -1,5 +1,5 @@
 # Use Python 3.11 slim image for smaller size
-FROM python:3.11-slim
+FROM python:3.11-slim AS base
 
 # Set working directory
 WORKDIR /app
@@ -7,6 +7,7 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -31,4 +32,13 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/api/health || exit 1
 
 # Run the application with gunicorn for production
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--worker-class", "sync", "app:app"]
+
+# Mark this stage as production for docker-compose target compatibility
+FROM base AS production
+COPY --from=base /app /app
+USER app
+EXPOSE 5000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/api/health || exit 1
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--worker-class", "sync", "app:app"]

@@ -5,13 +5,15 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
+      target: production
     ports:
       - "5000:5000"
     environment:
       - CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:80}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:80,http://127.0.0.1:80,http://127.0.0.1:5173}
       - RATE_LIMIT=${RATE_LIMIT:-30/minute}
       - MAX_FILE_BYTES=${MAX_FILE_BYTES:-120000}
+      - NODE_ENV=production
     env_file:
       - ./api/.env
     restart: unless-stopped
@@ -19,52 +21,89 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
+    networks:
+      - codesage-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   ui:
     build:
       context: ./ui
       dockerfile: Dockerfile
+      target: production
+      args:
+        - NODE_ENV=production
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
       timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - codesage-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis for advanced caching and session storage
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 40s
+    networks:
+      - codesage-network
 
-  # Optional: Redis for advanced caching (uncomment if needed)
-  # redis:
-  #   image: redis:7-alpine
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis_data:/data
-  #   restart: unless-stopped
-  #   command: redis-server --appendonly yes
+  # PostgreSQL for analytics and collaboration data
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: codesage
+      POSTGRES_USER: codesage
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-codesage_secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codesage -d codesage"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - codesage-network
 
-  # Optional: PostgreSQL for metrics storage (uncomment if needed)
-  # postgres:
-  #   image: postgres:15-alpine
-  #   environment:
-  #     POSTGRES_DB: codesage
-  #     POSTGRES_USER: codesage
-  #     POSTGRES_PASSWORD: ${DB_PASSWORD}
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   ports:
-  #     - "5432:5432"
-  #   restart: unless-stopped
-
-# volumes:
-  # redis_data:
-  # postgres_data:
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
 
 networks:
-  default:
+  codesage-network:
+    driver: bridge
     name: codesage-network

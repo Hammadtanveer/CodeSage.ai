@@ -59,7 +59,241 @@ body {
   transform-style: preserve-3d;
 }
 
-/* Interactive Aurora Layers */
+/* Light theme aurora background */
+.light .aurora-background {
+  background-color: hsl(0, 0%, 98%);
+  background-image:
+    radial-gradient(ellipse 50% 80% at 20% 40%, hsla(217, 45%, 60%, 0.08), transparent),
+    radial-gradient(ellipse 50% 80% at 80% 50%, hsla(260, 40%, 60%, 0.06), transparent),
+    radial-gradient(ellipse 40% 60% at 60% 20%, hsla(200, 42%, 60%, 0.05), transparent),
+    radial-gradient(ellipse 60% 70% at 40% 80%, hsla(280, 38%, 60%, 0.04), transparent),
+    radial-gradient(ellipse 80% 60% at 10% 10%, hsla(240, 44%, 60%, 0.03), transparent),
+    radial-gradient(ellipse 60% 80% at 90% 90%, hsla(220, 46%, 60%, 0.035), transparent),
+    radial-gradient(ellipse 70% 50% at 50% 50%, hsla(215, 43%, 60%, 0.02), transparent);
+}
+
+/* Light Theme Styles */
+.light {
+  color-scheme: light;
+}
+
+/* Light theme glass morphism */
+.light .glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.light .glass-card::before {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.light .glass-card:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 30px rgba(79, 172, 254, 0.05);
+}
+
+/* Light theme buttons */
+.light .btn-primary {
+  background: linear-gradient(135deg, hsl(217, 65%, 55%), hsl(260, 60%, 55%));
+  color: white;
+  box-shadow:
+    0 4px 20px rgba(79, 172, 254, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.light .btn-primary:hover {
+  background: linear-gradient(135deg, hsl(217, 70%, 60%), hsl(260, 65%, 60%));
+  box-shadow:
+    0 12px 40px rgba(79, 172, 254, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 40px rgba(79, 172, 254, 0.2);
+}
+
+/* Light theme inputs */
+.light .input-enhanced {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #1f2937;
+}
+
+.light .input-enhanced:focus {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: hsl(217, 65%, 55%);
+  box-shadow:
+    0 0 0 3px rgba(79, 172, 254, 0.1),
+    0 4px 20px rgba(79, 172, 254, 0.1);
+}
+
+.light .input-enhanced::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.light .input-enhanced:focus::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+/* Light theme particles */
+.light .particles-layer {
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, hsla(217, 30%, 40%, 0.2), transparent),
+    radial-gradient(2px 2px at 40px 70px, hsla(260, 25%, 40%, 0.15), transparent),
+    radial-gradient(1px 1px at 90px 40px, hsla(200, 35%, 40%, 0.25), transparent),
+    radial-gradient(1px 1px at 130px 80px, hsla(280, 20%, 40%, 0.2), transparent),
+    radial-gradient(2px 2px at 160px 30px, hsla(217, 25%, 40%, 0.15), transparent),
+    radial-gradient(1px 1px at 200px 60px, hsla(240, 30%, 40%, 0.2), transparent),
+    radial-gradient(1px 1px at 240px 90px, hsla(220, 28%, 40%, 0.15), transparent);
+  opacity: 0.4;
+}
+
+/* Light theme scrollbar */
+.light ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, hsl(217, 40%, 60%), hsl(260, 35%, 60%));
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, hsl(217, 45%, 65%), hsl(260, 40%, 65%));
+  box-shadow: 0 0 20px rgba(79, 172, 254, 0.2);
+}
+
+/* Light theme markdown */
+.light .markdown-body {
+  color: #374151;
+}
+
+.light .markdown-body h1,
+.light .markdown-body h2,
+.light .markdown-body h3 {
+  background: linear-gradient(135deg,
+    hsl(217, 65%, 45%),
+    hsl(260, 60%, 45%),
+    hsl(200, 62%, 45%)
+  );
+  -webkit-text-fill-color: transparent;
+}
+
+.light .markdown-body h1::after {
+  background: linear-gradient(90deg, transparent, hsl(217, 65%, 55%), transparent);
+}
+
+.light .markdown-body h2 {
+  border-left-color: hsl(217, 65%, 55%);
+}
+
+.light .markdown-body code {
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.08), rgba(79, 172, 254, 0.04));
+  color: hsl(217, 65%, 35%);
+  border-color: rgba(79, 172, 254, 0.2);
+  box-shadow:
+    0 2px 8px rgba(79, 172, 254, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.light .markdown-body pre {
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0.7)
+  );
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.light .markdown-body pre::before {
+  background: hsl(217, 65%, 55%);
+  box-shadow:
+    20px 0 0 hsl(260, 60%, 55%),
+    40px 0 0 hsl(200, 62%, 55%);
+}
+
+.light .markdown-body pre::after {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.light .markdown-body blockquote {
+  border-left-color: hsl(217, 65%, 55%);
+  background: rgba(79, 172, 254, 0.03);
+}
+
+.light .markdown-body blockquote::before {
+  color: hsl(217, 65%, 55%);
+}
+
+.light .markdown-body strong {
+  background: linear-gradient(135deg, hsl(217, 65%, 35%), hsl(260, 60%, 35%));
+  -webkit-text-fill-color: transparent;
+}
+
+/* Light theme loading states */
+.light .progress-ring-circle {
+  stroke: hsl(217, 65%, 55%);
+}
+
+.light .file-icon {
+  background: hsl(217, 65%, 55%);
+}
+
+.light .loading-text,
+.light .loading-status {
+  color: rgba(0, 0, 0, 0.7);
+  text-shadow: none;
+}
+
+/* Light theme error states */
+.light .error-container {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.light .error-title {
+  color: #dc2626;
+}
+
+.light .error-message {
+  color: #6b7280;
+}
+
+.light .btn-retry {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.light .btn-retry:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Light theme tooltips */
+.light .tooltip::before {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .tooltip::after {
+  border-top-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Light theme footer */
+.light footer {
+  color: #6b7280;
+}
+
+/* Advanced 3D Aurora Layers with Depth */
 .aurora-background::before {
   content: '';
   position: absolute;
@@ -74,6 +308,7 @@ body {
   animation: aurora-pulse 12s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 1;
+  transform: translateZ(50px);
 }
 
 /* Interactive Mouse Cursor */
@@ -92,6 +327,30 @@ body {
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   mix-blend-mode: screen;
   box-shadow: 0 0 10px hsla(217, 45%, 50%, 0.2);
+}
+
+/* Advanced 3D Aurora Float Animation */
+@keyframes aurora-float {
+  0% {
+    transform: translateZ(20px) scale(1.1) rotateX(0deg);
+    opacity: 0.6;
+  }
+  25% {
+    transform: translateZ(30px) scale(1.15) rotateX(5deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateZ(15px) scale(1.05) rotateX(-3deg);
+    opacity: 0.7;
+  }
+  75% {
+    transform: translateZ(25px) scale(1.12) rotateX(2deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateZ(20px) scale(1.1) rotateX(0deg);
+    opacity: 0.6;
+  }
 }
 
 @keyframes aurora-flow {
@@ -604,6 +863,31 @@ body {
   100% { transform: rotate(360deg) scale(1); }
 }
 
+@keyframes progress-ring-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(79, 172, 254, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(79, 172, 254, 0.6));
+  }
+}
+
+@keyframes loading-text-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes progress-fill-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 .spin-enhanced {
   animation: spin-enhanced 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
@@ -639,6 +923,8 @@ body {
   margin-top: 1rem;
   text-align: center;
   font-weight: 500;
+  animation: loading-text-pulse 2s ease-in-out infinite;
+  text-shadow: 0 0 10px currentColor;
 }
 
 .loading-status {
@@ -646,6 +932,9 @@ body {
   color: rgba(255, 255, 255, 0.6);
   margin-top: 0.5rem;
   min-height: 1rem;
+  animation: loading-text-pulse 2.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+  text-align: center;
 }
 
 /* Shimmer Effects for Content Loading */

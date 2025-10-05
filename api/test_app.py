@@ -188,8 +188,11 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         assert response.mimetype == "text/event-stream"
 
-    def test_rate_limit_endpoint(self, client, mock_env):
+    @patch('app.fetch_code')
+    def test_rate_limit_endpoint(self, mock_fetch, client, mock_env):
         """Test rate limiting"""
+        mock_fetch.return_value = "function test() { return 'hello'; }"
+
         # Make multiple requests quickly
         for i in range(5):
             response = client.post('/api/review', json={
@@ -208,13 +211,14 @@ class TestErrorHandling:
         """Test error response format"""
         from app import error_response
 
-        response, status_code = error_response("Test error", 400, "test-id")
+        with app.app_context():
+            response, status_code = error_response("Test error", 400, "test-id")
 
-        assert status_code == 400
-        data = json.loads(response.data)
-        assert data["error"]["message"] == "Test error"
-        assert data["error"]["code"] == 400
-        assert data["error"]["request_id"] == "test-id"
+            assert status_code == 400
+            data = json.loads(response.data)
+            assert data["error"]["message"] == "Test error"
+            assert data["error"]["code"] == 400
+            assert data["error"]["request_id"] == "test-id"
 
 
 if __name__ == '__main__':

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { Github, Wand2, Sparkles, Copy, Download, Check, Code2, Link as LinkIcon, FolderOpen, AlertCircle, RefreshCw, FileText, Zap } from 'lucide-react';
+import { Github, Wand2, Sparkles, Copy, Download, Check, Code2, Link as LinkIcon, FolderOpen, AlertCircle, RefreshCw, FileText, Zap, Sun, Moon, Monitor, Smartphone, X, Lightbulb } from 'lucide-react';
 
-// Enhanced Loading Component
+// Enhanced Loading Component with Advanced Animations
 const EnhancedLoading = ({ progress }: { progress: {
   stage: string;
   currentFile: string;
@@ -11,75 +11,185 @@ const EnhancedLoading = ({ progress }: { progress: {
   totalFiles: number;
   percentage: number;
   currentTask: string;
+  bytesProcessed: number;
+  totalBytes: number;
+  estimatedTimeRemaining: number;
 } }) => {
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (progress.percentage / 100) * circumference;
 
+  // Dynamic color based on progress stage - Always green as requested
+  const getProgressColor = () => {
+    return '#10b981'; // Always green
+  };
+
   return (
-    <div className="loading-container">
+    <motion.div
+      className="loading-container"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="relative">
-        <svg width="120" height="120" className="progress-ring">
+        {/* Background glow effect */}
+        <motion.div
+          className="absolute inset-0 rounded-full opacity-20"
+          style={{
+            background: `radial-gradient(circle, ${getProgressColor()} 0%, transparent 70%)`
+          }}
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+
+        <svg width="120" height="120" className="progress-ring relative z-10">
+          {/* Background circle */}
           <circle
             cx="60"
             cy="60"
             r={radius}
             fill="none"
             stroke="rgba(255,255,255,0.1)"
-            strokeWidth="3"
+            strokeWidth="2"
           />
+
+          {/* Main progress circle */}
           <motion.circle
             cx="60"
             cy="60"
             r={radius}
             fill="none"
-            stroke="hsl(var(--primary-hue), var(--primary-saturation), var(--primary-lightness))"
+            stroke={getProgressColor()}
             strokeWidth="3"
             className="progress-ring-circle"
             strokeDasharray={strokeDasharray}
             strokeDashoffset={strokeDashoffset}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
             strokeLinecap="round"
+            style={{
+              filter: `drop-shadow(0 0 8px ${getProgressColor()})`
+            }}
+          />
+
+          {/* Animated inner circle for extra visual appeal */}
+          <motion.circle
+            cx="60"
+            cy="60"
+            r={radius - 8}
+            fill="none"
+            stroke={getProgressColor()}
+            strokeWidth="1"
+            strokeDasharray="10 5"
+            initial={{ rotate: 0 }}
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            opacity={0.6}
           />
         </svg>
 
         {/* Center content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-3 h-3 bg-primary rounded-full"
+            animate={{
+              rotate: 360,
+              scale: [1, 1.1, 1]
+            }}
+            transition={{
+              rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+              scale: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="w-3 h-3 rounded-full mb-2"
+            style={{ backgroundColor: getProgressColor() }}
           />
-          <div className="loading-text">
-            {progress.percentage}%
-          </div>
         </div>
       </div>
 
-      <div className="loading-status">
+      {/* Enhanced status display */}
+      <motion.div
+        className="loading-status text-center"
+        key={progress.currentTask}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         {progress.currentTask}
-      </div>
+      </motion.div>
 
+      {/* File processing indicator */}
       {progress.currentFile && (
-        <div className="file-indicator">
-          <div className="file-icon" />
+        <motion.div
+          className="file-indicator"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div
+            className="file-icon"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.7, 1, 0.7]
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
           <span className="file-name">{progress.currentFile}</span>
-        </div>
+        </motion.div>
       )}
 
-      {/* Progress bar */}
+      {/* Enhanced progress bar */}
       <div className="progress-bar">
         <motion.div
           className="progress-fill"
           initial={{ width: "0%" }}
           animate={{ width: `${progress.percentage}%` }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+          transition={{
+            duration: 0.5,
+            ease: "easeOut",
+            type: "spring",
+            stiffness: 100,
+            damping: 15
+          }}
+          style={{
+            background: `linear-gradient(90deg, ${getProgressColor()}, ${getProgressColor()}dd)`
+          }}
         />
       </div>
-    </div>
+
+      {/* Processing stats */}
+      {(progress.bytesProcessed > 0 || progress.filesProcessed > 0) && (
+        <motion.div
+          className="text-xs text-gray-400 text-center mt-2 space-y-1"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+        >
+          {progress.bytesProcessed > 0 && (
+            <div>📊 {Math.round(progress.bytesProcessed / 1024)}KB processed</div>
+          )}
+          {progress.filesProcessed > 0 && progress.totalFiles > 0 && (
+            <div>📁 {progress.filesProcessed}/{progress.totalFiles} files</div>
+          )}
+        </motion.div>
+      )}
+    </motion.div>
   );
 };
 
@@ -211,6 +321,260 @@ const CodeBlockWithCopy = ({ children, className, ...props }: React.HTMLAttribut
 type Mode = 'bugs' | 'improvements' | 'refactor' | 'explain' | 'performance' | 'security';
 type AnalysisMode = 'overview' | 'bugs' | 'improvements' | 'refactor' | 'architecture' | 'security' | 'explain' | 'performance';
 type InputMode = 'github' | 'code' | 'repository';
+type Theme = 'light' | 'dark' | 'auto';
+
+// PWA Install Prompt Component
+const PWAInstallPrompt = () => {
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    const handleShowPrompt = () => setShowPrompt(true);
+    const handlePWAInstalled = () => {
+      setIsInstalled(true);
+      setShowPrompt(false);
+    };
+
+    window.addEventListener('showInstallPrompt', handleShowPrompt);
+    window.addEventListener('pwaInstalled', handlePWAInstalled);
+
+    // Check if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener('showInstallPrompt', handleShowPrompt);
+      window.removeEventListener('pwaInstalled', handlePWAInstalled);
+    };
+  }, []);
+
+  if (isInstalled || !showPrompt) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 100 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 100 }}
+        className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm"
+      >
+        <div className="glass-card p-4 bg-primary/10 border-primary/30">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-primary/20 rounded-lg">
+              <Smartphone className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-white mb-1">Install CodeSage</h3>
+              <p className="text-sm text-gray-300 mb-3">
+                Get the full experience with offline access and native app features.
+              </p>
+              <div className="flex gap-2">
+                <motion.button
+                  onClick={() => {
+                    (window as any).installPWA?.();
+                    setShowPrompt(false);
+                  }}
+                  className="btn-primary text-sm px-3 py-1.5"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Install
+                </motion.button>
+                <button
+                  onClick={() => setShowPrompt(false)}
+                  className="text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5"
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPrompt(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+// Theme Switcher Component
+const ThemeSwitcher = () => {
+  const [theme, setTheme] = useState<Theme>('auto');
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    // Load saved theme
+    const savedTheme = localStorage.getItem('codesage-theme') as Theme || 'auto';
+    setTheme(savedTheme);
+    applyTheme(savedTheme);
+  }, []);
+
+  const applyTheme = (newTheme: Theme) => {
+    const root = document.documentElement;
+
+    if (newTheme === 'dark' || (newTheme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+  };
+
+  const handleThemeChange = (newTheme: Theme) => {
+    setTheme(newTheme);
+    localStorage.setItem('codesage-theme', newTheme);
+    applyTheme(newTheme);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 transition-all duration-200"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        title="Change theme"
+      >
+        <Monitor className="w-4 h-4 text-gray-300" />
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40"
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              className="absolute top-full right-0 mt-2 z-50 glass-card p-2 min-w-[200px]"
+            >
+              {[
+                { key: 'light', label: 'Light', icon: Sun },
+                { key: 'dark', label: 'Dark', icon: Moon },
+                { key: 'auto', label: 'Auto', icon: Monitor }
+              ].map((themeOption) => (
+                <motion.button
+                  key={themeOption.key}
+                  onClick={() => handleThemeChange(themeOption.key as Theme)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                    theme === themeOption.key
+                      ? 'bg-primary/20 text-primary'
+                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <themeOption.icon className="w-4 h-4" />
+                  {themeOption.label}
+                </motion.button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Demo Button Component
+const DemoButton = () => {
+  const [isLoadingDemo, setIsLoadingDemo] = useState(false);
+
+  const loadDemo = async () => {
+    setIsLoadingDemo(true);
+
+    // Simulate loading demo content
+    setTimeout(() => {
+      // Set demo code in the appropriate input
+      const demoCode = `// Demo: React Component with Performance Issues
+import React, { useState, useEffect } from 'react';
+
+function ExpensiveComponent() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // This effect runs on every render - performance issue!
+  useEffect(() => {
+    console.log('Effect running...');
+    fetchData();
+  });
+
+  const fetchData = async () => {
+    // Simulate API call
+    const result = await new Promise(resolve =>
+      setTimeout(() => resolve([1, 2, 3, 4, 5]), 1000)
+    );
+    setData(result);
+    setLoading(false);
+  };
+
+  // This function is recreated on every render - another issue!
+  const handleClick = (item) => {
+    console.log('Clicked:', item);
+  };
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      {data.map(item => (
+        <button key={item} onClick={() => handleClick(item)}>
+          Item {item}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default ExpensiveComponent;`;
+
+      // Set to code input mode and populate with demo
+      setTimeout(() => {
+        // This would need to be passed down as props or use context
+        // For now, we'll use localStorage to communicate with parent
+        localStorage.setItem('codesage-demo-code', demoCode);
+        localStorage.setItem('codesage-input-mode', 'code');
+
+        // Trigger a custom event that parent can listen to
+        window.dispatchEvent(new CustomEvent('loadDemo'));
+
+        setIsLoadingDemo(false);
+      }, 500);
+    }, 1000);
+  };
+
+  return (
+    <motion.button
+      onClick={loadDemo}
+      disabled={isLoadingDemo}
+      className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg transition-all duration-200 disabled:opacity-50"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      title="Try CodeSage with sample code"
+    >
+      <motion.div
+        animate={isLoadingDemo ? { rotate: 360 } : {}}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+      >
+        <Lightbulb className="w-4 h-4" />
+      </motion.div>
+      {isLoadingDemo ? 'Loading Demo...' : 'Try Demo'}
+    </motion.button>
+  );
+};
 
 function App() {
   const [inputMode, setInputMode] = useState<InputMode>('github');
@@ -223,19 +587,26 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  // collaboration feature removed
 
-  // Enhanced loading states
+  // Enhanced loading states with real-time progress
   const [loadingProgress, setLoadingProgress] = useState({
     stage: 'idle', // 'idle', 'fetching', 'analyzing', 'complete'
     currentFile: '',
     filesProcessed: 0,
     totalFiles: 0,
     percentage: 0,
-    currentTask: 'Initializing...'
+    currentTask: 'Initializing...',
+    bytesProcessed: 0,
+    totalBytes: 0,
+    estimatedTimeRemaining: 0
   });
 
   // Debounce timer for API requests
   const debounceTimer = useRef<number | null>(null);
+
+  // Smooth progress timer (useRef to avoid re-declaration on renders)
+  const smoothProgressTimer = useRef<number | null>(null);
 
   // Mouse position tracking for custom cursor
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -329,7 +700,7 @@ function App() {
     }, 600);
   };
 
-  // Debounced API call function
+  // Debounced API call function with enhanced progress tracking
   const debouncedApiCall = useCallback(async () => {
     if (inputMode === 'github' && !url) {
       setError('Please enter a GitHub URL.');
@@ -348,6 +719,19 @@ function App() {
     setError('');
     setResponse('');
 
+    // Initialize loading progress
+    setLoadingProgress({
+      stage: 'fetching',
+      currentFile: '',
+      filesProcessed: 0,
+      totalFiles: 0,
+      percentage: 0,
+      currentTask: 'Connecting to AI service...',
+      bytesProcessed: 0,
+      totalBytes: 0,
+      estimatedTimeRemaining: 0
+    });
+
     try {
       let requestBody;
       let endpoint;
@@ -365,25 +749,146 @@ function App() {
         endpoint = 'http://localhost:5000/api/review';
       }
 
+      // Update progress for request initiation
+      setLoadingProgress({
+        stage: 'fetching',
+        currentFile: '',
+        filesProcessed: 0,
+        totalFiles: 0,
+        percentage: 10,
+        currentTask: 'Sending request to AI service...',
+        bytesProcessed: 0,
+        totalBytes: 0,
+        estimatedTimeRemaining: 0
+      });
+
+      console.log('🚀 Starting API request to:', endpoint);
+
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
       });
 
+      console.log('📡 Response status:', res.status);
+
       if (!res.ok || !res.body) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
 
+      // Update progress for successful connection
+      setLoadingProgress({
+        stage: 'analyzing',
+        currentFile: '',
+        filesProcessed: 0,
+        totalFiles: 0,
+        percentage: 25,
+        currentTask: 'AI is analyzing your code...',
+        bytesProcessed: 0,
+        totalBytes: 0,
+        estimatedTimeRemaining: 8
+      });
+
+      console.log('✅ Connected to API, starting stream processing');
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
+      let chunkCount = 0;
+      let totalResponseLength = 0;
+      let progressUpdateCount = 0;
+
+      // Progress update function to avoid conflicts
+      const updateProgress = (percentage: number, task: string, timeRemaining?: number) => {
+        progressUpdateCount++;
+        setLoadingProgress({
+          stage: progressUpdateCount > 10 ? 'analyzing' : 'fetching',
+          currentFile: '',
+          filesProcessed: 0,
+          totalFiles: 0,
+          percentage: Math.min(percentage, 95),
+          currentTask: task,
+          bytesProcessed: totalResponseLength,
+          totalBytes: 0,
+          estimatedTimeRemaining: timeRemaining || 5
+        });
+      };
+
+      // Ultra-smooth progressive loading system
+      let currentSmoothProgress = 10;
+      let progressVelocity = 0;
+      let targetProgress = 25;
+
+      const startSmoothProgress = () => {
+        smoothProgressTimer.current = window.setInterval(() => {
+          // Physics-based smooth progress animation
+          const diff = targetProgress - currentSmoothProgress;
+          progressVelocity += diff * 0.1; // Spring physics
+          progressVelocity *= 0.8; // Damping
+          currentSmoothProgress += progressVelocity;
+
+          // Snap to target when close enough
+          if (Math.abs(diff) < 1) {
+            currentSmoothProgress = targetProgress;
+
+            // Move to next target
+            if (targetProgress === 25) {
+              targetProgress = 35;
+            } else if (targetProgress === 35) {
+              targetProgress = 45;
+            } else if (targetProgress === 45) {
+              targetProgress = 60;
+            } else if (targetProgress === 60) {
+              targetProgress = 75;
+            } else if (targetProgress === 75) {
+              targetProgress = 85;
+            }
+          }
+
+          setLoadingProgress(prev => ({
+            ...prev,
+            percentage: Math.round(Math.max(prev.percentage, currentSmoothProgress)),
+            currentTask: getTaskForProgress(Math.round(currentSmoothProgress))
+          }));
+        }, 100); // Update every 100ms for ultra-smooth animation
+      };
+
+      const getTaskForProgress = (progress: number): string => {
+        if (progress <= 15) return 'Sending request to AI service...';
+        if (progress <= 25) return 'Establishing connection...';
+        if (progress <= 35) return 'AI is analyzing your code...';
+        if (progress <= 45) return 'Processing initial response...';
+        if (progress <= 60) return 'Analyzing code structure...';
+        if (progress <= 75) return 'Generating insights...';
+        if (progress <= 85) return 'Finalizing analysis...';
+        return 'Streaming analysis results...';
+      };
+
+
+
+      // Start ultra-smooth progressive loading system
+      startSmoothProgress();
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
+        chunkCount++;
+        totalResponseLength += value.length;
+
+        // Update progress based on chunks received with proper timing
+        if (chunkCount === 1) {
+          updateProgress(35, 'Processing initial response...');
+        } else if (chunkCount === 3) {
+          updateProgress(45, 'Analyzing code structure...');
+        } else if (chunkCount === 6) {
+          updateProgress(60, 'Generating insights...');
+        } else if (chunkCount === 10) {
+          updateProgress(75, 'Finalizing analysis...');
+        } else if (chunkCount % 8 === 0 && chunkCount > 10) {
+          updateProgress(80 + Math.min(chunkCount / 2, 10), 'Streaming analysis results...');
+        }
 
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
@@ -407,17 +912,69 @@ function App() {
 
             if (evt === 'token' || !evt) {
               const piece = obj?.choices?.[0]?.delta?.content || '';
-              if (piece) setResponse(prev => prev + piece);
+              if (piece) {
+                setResponse(prev => prev + piece);
+
+                // Update progress based on response content length
+                if (progressUpdateCount > 5) {
+                  const newProgress = Math.min(85 + Math.floor(piece.length / 100), 95);
+                  updateProgress(newProgress, 'Streaming analysis results...');
+                }
+              }
             }
           } catch {
             // ignore non-JSON lines
           }
         }
       }
+
+      // Final progress update
+      setLoadingProgress({
+        stage: 'complete',
+        currentFile: '',
+        filesProcessed: 0,
+        totalFiles: 0,
+        percentage: 100,
+        currentTask: 'Analysis complete!',
+        bytesProcessed: totalResponseLength,
+        totalBytes: 0,
+        estimatedTimeRemaining: 0
+      });
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+      setLoadingProgress({
+        stage: 'idle',
+        currentFile: '',
+        filesProcessed: 0,
+        totalFiles: 0,
+        percentage: 0,
+        currentTask: 'Error occurred',
+        bytesProcessed: 0,
+        totalBytes: 0,
+        estimatedTimeRemaining: 0
+      });
     } finally {
       setIsLoading(false);
+      // Stop smooth progress mechanism and reset state
+      if (smoothProgressTimer.current) {
+        clearInterval(smoothProgressTimer.current as number);
+        smoothProgressTimer.current = null;
+      }
+      // Reset loading state after a brief delay
+      setTimeout(() => {
+        setLoadingProgress({
+          stage: 'idle',
+          currentFile: '',
+          filesProcessed: 0,
+          totalFiles: 0,
+          percentage: 0,
+          currentTask: 'Initializing...',
+          bytesProcessed: 0,
+          totalBytes: 0,
+          estimatedTimeRemaining: 0
+        });
+      }, 2000);
     }
   }, [inputMode, url, code, repositoryUrl, mode, analysisMode]);
 
@@ -432,6 +989,59 @@ function App() {
       debouncedApiCall();
     }, 500);
   }, [debouncedApiCall]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+Enter or Cmd+Enter to submit
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !isLoading) {
+        e.preventDefault();
+        handleReview();
+      }
+
+      // Ctrl+K or Cmd+K to clear all
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setUrl('');
+        setCode('');
+        setRepositoryUrl('');
+        setResponse('');
+        setError('');
+      }
+
+      // Ctrl+S or Cmd+S to save analysis
+      if ((e.ctrlKey || e.metaKey) && e.key === 's' && response) {
+        e.preventDefault();
+        handleDownload();
+      }
+
+      // Escape to close modals/dropdowns
+      if (e.key === 'Escape') {
+        setError('');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isLoading, handleReview, response, handleDownload]);
+
+  // Listen for demo load events
+  useEffect(() => {
+    const handleDemoLoad = () => {
+      const demoCode = localStorage.getItem('codesage-demo-code');
+      const demoInputMode = localStorage.getItem('codesage-input-mode');
+
+      if (demoCode && demoInputMode === 'code') {
+        setCode(demoCode);
+        setInputMode('code');
+        localStorage.removeItem('codesage-demo-code');
+        localStorage.removeItem('codesage-input-mode');
+      }
+    };
+
+    window.addEventListener('loadDemo', handleDemoLoad);
+    return () => window.removeEventListener('loadDemo', handleDemoLoad);
+  }, []);
 
   return (
     <div className="min-h-screen w-full aurora-background">
@@ -475,6 +1085,22 @@ function App() {
       </motion.div>
 
       <div className="max-w-4xl mx-auto px-4 py-16">
+
+        {/* Header with Controls */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-between items-center mb-8"
+        >
+          <div className="flex items-center gap-4">
+            <DemoButton />
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Collaboration Hub removed */}
+            <ThemeSwitcher />
+          </div>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -858,6 +1484,13 @@ function App() {
           </motion.div>
         )}
       </div>
+
+
+
+      {/* Collaboration Hub removed */}
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
 
       <footer className="text-center py-8 text-gray-500 text-sm">
         <p>&copy; 2025 CodeSage.ai - Your AI Code Mentor</p>
